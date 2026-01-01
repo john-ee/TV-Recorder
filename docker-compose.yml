@@ -1,0 +1,23 @@
+services:
+  tv-recorder:
+    build: .
+    container_name: tv-recorder
+    restart: unless-stopped
+    ports:
+      - "5010:5000"
+    volumes:
+      # Mount channels config (can be edited on host)
+      - ./channels.json:/app/channels.json:ro
+      # Mount recordings directory
+      - /dump/conversions/disks:/recordings
+      # EPG and schedules cache (for persistence across restarts)
+      - ./data:/tmp
+    environment:
+      - TZ=Europe/Paris
+      - PYTHONUNBUFFERED=1
+    networks:
+      - tv-recorder-net
+    
+networks:
+  tv-recorder-net:
+    driver: bridge
