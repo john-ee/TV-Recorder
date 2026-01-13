@@ -3,252 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TV Recorder - EPG & Scheduler</title>
+    <title>TV Recorder</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0f1419;
-            color: #e4e6eb;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #2d3748;
-            padding-bottom: 10px;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            background: #1a1f2e;
-            border: none;
-            color: #a0aec0;
-            cursor: pointer;
-            border-radius: 8px 8px 0 0;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .tab.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .filters {
-            background: #1a1f2e;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        select, input {
-            padding: 10px 15px;
-            background: #2d3748;
-            border: 1px solid #4a5568;
-            color: #e4e6eb;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-
-        .program-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }
-
-        .program-card {
-            background: #1a1f2e;
-            border-radius: 12px;
-            padding: 20px;
-            border: 2px solid transparent;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .program-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
-        }
-
-        .program-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-        }
-
-        .channel-badge {
-            background: #667eea;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .time-badge {
-            background: #2d3748;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-
-        .program-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-
-        .program-meta {
-            color: #a0aec0;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .program-description {
-            color: #cbd5e0;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .record-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .record-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .record-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .recording-list {
-            background: #1a1f2e;
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .recording-item {
-            background: #2d3748;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: #48bb78;
-            color: white;
-        }
-
-        .status-scheduled {
-            background: #ed8936;
-            color: white;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #a0aec0;
-        }
-
-        .spinner {
-            border: 3px solid #2d3748;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #a0aec0;
-        }
-
-        .empty-state svg {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1419; color: #e4e6eb; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px; margin-bottom: 30px; }
+        h1 { font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { opacity: 0.9; font-size: 1.1rem; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #2d3748; padding-bottom: 10px; }
+        .tab { padding: 10px 20px; background: #1a1f2e; border: none; color: #a0aec0; cursor: pointer; border-radius: 8px 8px 0 0; font-size: 1rem; }
+        .tab.active { background: #667eea; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .view-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
+        .view-btn { padding: 10px 20px; background: #2d3748; border: 2px solid #4a5568; color: #e4e6eb; border-radius: 8px; cursor: pointer; }
+        .view-btn.active { background: #667eea; border-color: #667eea; }
+        .filters { background: #1a1f2e; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; }
+        select, input { padding: 10px 15px; background: #2d3748; border: 1px solid #4a5568; color: #e4e6eb; border-radius: 8px; font-size: 1rem; }
+        .view-container { display: none; }
+        .view-container.active { display: block; }
+        .cards-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+        .program-card { background: #1a1f2e; border-radius: 12px; padding: 20px; border: 2px solid transparent; transition: all 0.3s; }
+        .program-card:hover { border-color: #667eea; transform: translateY(-2px); }
+        .program-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .channel-badge { background: #667eea; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .time-badge { background: #2d3748; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; }
+        .program-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; }
+        .program-meta { color: #a0aec0; font-size: 0.9rem; margin-bottom: 10px; }
+        .program-description { color: #cbd5e0; font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px; max-height: 4.5em; overflow: hidden; }
+        .record-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .record-btn:hover { transform: scale(1.02); }
+        .grid-view { overflow-x: auto; background: #1a1f2e; border-radius: 12px; padding: 10px; }
+        .grid-view table { width: 100%; border-collapse: collapse; }
+        .grid-view th { background: #2d3748; padding: 12px 8px; text-align: left; position: sticky; top: 0; z-index: 10; font-size: 0.9rem; }
+        .grid-view th:first-child { position: sticky; left: 0; z-index: 11; background: #2d3748; min-width: 100px; }
+        .grid-view td { padding: 8px; border: 1px solid #2d3748; vertical-align: top; min-width: 200px; }
+        .grid-view td:first-child { position: sticky; left: 0; background: #1a1f2e; font-weight: 600; z-index: 5; }
+        .grid-program { background: #2d3748; padding: 8px; border-radius: 6px; margin-bottom: 6px; cursor: pointer; font-size: 0.85rem; }
+        .grid-program:hover { background: #4a5568; }
+        .grid-program-time { color: #a0aec0; font-size: 0.75rem; margin-bottom: 4px; }
+        .grid-program-title { font-weight: 600; margin-bottom: 2px; }
+        .recording-list { background: #1a1f2e; border-radius: 12px; padding: 20px; }
+        .recording-item { background: #2d3748; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .status-active { background: #48bb78; color: white; }
+        .status-scheduled { background: #ed8936; color: white; }
+        .loading { text-align: center; padding: 40px; color: #a0aec0; }
+        .spinner { border: 3px solid #2d3748; border-top: 3px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 60px 20px; color: #a0aec0; }
+        .cancel-btn { background: #e53e3e; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -257,293 +62,197 @@
             <h1>📺 TV Recorder</h1>
             <div class="subtitle">Guide TV & Programmation d'enregistrements</div>
         </header>
-
         <div class="tabs">
-            <button class="tab active" data-tab="epg" onclick="switchTab('epg')">Guide TV</button>
-            <button class="tab" data-tab="recordings" onclick="switchTab('recordings')">Enregistrements</button>
+            <button class="tab active" data-tab="epg">Guide TV</button>
+            <button class="tab" data-tab="recordings">Enregistrements</button>
         </div>
-
         <div id="epg-tab" class="tab-content active">
+            <div class="view-toggle">
+                <button class="view-btn active" data-view="cards">📋 Cartes</button>
+                <button class="view-btn" data-view="grid">📺 Grille</button>
+            </div>
             <div class="filters">
-                <select id="channel-filter" onchange="filterPrograms()">
-                    <option value="">Toutes les chaînes</option>
-                    <!-- Dynamically populated -->
-                </select>
-
-                <select id="date-filter" onchange="filterPrograms()">
-                    <option value="0">Aujourd'hui</option>
-                    <option value="1">Demain</option>
-                    <option value="2">Dans 2 jours</option>
-                    <option value="3">Dans 3 jours</option>
-                </select>
-
-                <input type="text" id="search-filter" placeholder="Rechercher un programme..." oninput="filterPrograms()">
+                <select id="channel-filter"><option value="">Toutes les chaînes</option></select>
+                <select id="date-filter"><option value="0">Aujourd'hui</option><option value="1">Demain</option><option value="2">Dans 2 jours</option><option value="3">Dans 3 jours</option></select>
+                <input type="text" id="search-filter" placeholder="Rechercher...">
             </div>
-
-            <div id="epg-content" class="program-grid">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <div>Chargement du guide TV...</div>
-                </div>
-            </div>
+            <div id="cards-view" class="view-container active"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+            <div id="grid-view" class="view-container"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
         </div>
-
         <div id="recordings-tab" class="tab-content">
             <h2 style="margin-bottom: 20px;">Enregistrements actifs</h2>
             <div id="active-recordings" class="recording-list"></div>
-
             <h2 style="margin: 30px 0 20px;">Enregistrements programmés</h2>
             <div id="scheduled-recordings" class="recording-list"></div>
         </div>
     </div>
-
     <script>
         let allPrograms = [];
-        let availableChannels = [];
-
+        let programData = {};
+        let currentView = 'cards';
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById(tabName + '-tab').classList.add('active');
+                if (tabName === 'recordings') loadRecordings();
+            });
+        });
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentView = this.dataset.view;
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                document.getElementById(currentView + '-view').classList.add('active');
+                filterPrograms();
+            });
+        });
+        document.getElementById('channel-filter').addEventListener('change', filterPrograms);
+        document.getElementById('date-filter').addEventListener('change', filterPrograms);
+        document.getElementById('search-filter').addEventListener('input', filterPrograms);
         async function loadEPG() {
             try {
                 const response = await fetch('/api/epg');
                 allPrograms = await response.json();
-                
-                // Extract unique channels from programs
-                const channelsSet = new Set();
-                allPrograms.forEach(p => {
-                    channelsSet.add(JSON.stringify({
-                        key: p.channel_key,
-                        name: p.channel_name
-                    }));
-                });
-                
-                availableChannels = Array.from(channelsSet).map(s => JSON.parse(s));
-                availableChannels.sort((a, b) => a.name.localeCompare(b.name));
-                
-                // Populate channel filter
-                const channelFilter = document.getElementById('channel-filter');
-                channelFilter.innerHTML = '<option value="">Toutes les chaînes</option>' +
-                    availableChannels.map(ch => 
-                        `<option value="${ch.key}">${ch.name}</option>`
-                    ).join('');
-                
+                const channels = [...new Set(allPrograms.map(p => JSON.stringify({key: p.channel_key, name: p.channel_name})))].map(s => JSON.parse(s)).sort((a, b) => a.name.localeCompare(b.name));
+                document.getElementById('channel-filter').innerHTML = '<option value="">Toutes les chaînes</option>' + channels.map(ch => `<option value="${ch.key}">${ch.name}</option>`).join('');
                 filterPrograms();
             } catch (error) {
-                document.getElementById('epg-content').innerHTML = 
-                    '<div class="empty-state">Erreur de chargement du guide TV</div>';
+                console.error('Error:', error);
+                document.getElementById('cards-view').innerHTML = '<div class="empty-state">Erreur de chargement</div>';
             }
         }
-
         function filterPrograms() {
             const channelFilter = document.getElementById('channel-filter').value;
             const dateFilter = parseInt(document.getElementById('date-filter').value);
             const searchFilter = document.getElementById('search-filter').value.toLowerCase();
-
             const now = new Date();
             const targetDate = new Date(now);
             targetDate.setDate(targetDate.getDate() + dateFilter);
             targetDate.setHours(0, 0, 0, 0);
             const nextDay = new Date(targetDate);
             nextDay.setDate(nextDay.getDate() + 1);
-
-            let filtered = allPrograms.filter(p => {
+            const filtered = allPrograms.filter(p => {
                 const startDate = new Date(p.start);
-                const matchesChannel = !channelFilter || p.channel_key === channelFilter;
-                const matchesDate = startDate >= targetDate && startDate < nextDay;
-                const matchesSearch = !searchFilter || 
-                    p.title.toLowerCase().includes(searchFilter) ||
-                    (p.description && p.description.toLowerCase().includes(searchFilter));
-                
-                return matchesChannel && matchesDate && matchesSearch;
+                return (!channelFilter || p.channel_key === channelFilter) && (startDate >= targetDate && startDate < nextDay) && (!searchFilter || p.title.toLowerCase().includes(searchFilter) || (p.description && p.description.toLowerCase().includes(searchFilter)));
             });
-
-            displayPrograms(filtered);
+            if (currentView === 'cards') displayCards(filtered); else displayGrid(filtered);
         }
-
-        function displayPrograms(programs) {
-            const container = document.getElementById('epg-content');
-            
+        function displayCards(programs) {
+            const container = document.getElementById('cards-view');
             if (programs.length === 0) {
                 container.innerHTML = '<div class="empty-state">Aucun programme trouvé</div>';
                 return;
             }
-
-            container.innerHTML = programs.map((p, index) => {
-                // Store program data in a Map to avoid escaping issues
-                window.programData = window.programData || {};
-                window.programData[`prog_${index}`] = p;
-                
-                return `
-                <div class="program-card">
-                    <div class="program-header">
-                        <span class="channel-badge">${p.channel_name}</span>
-                        <span class="time-badge">${p.start_display} - ${p.stop_display}</span>
-                    </div>
-                    <div class="program-title">${p.title}</div>
-                    <div class="program-meta">
-                        ${p.category ? p.category + ' • ' : ''}${Math.floor(p.duration / 60)} min
-                    </div>
-                    ${p.description ? `<div class="program-description">${p.description}</div>` : ''}
-                    <button class="record-btn" data-program-id="prog_${index}">
-                        📹 Enregistrer
-                    </button>
-                </div>
-            `}).join('');
-            
-            // Add event listeners to all record buttons
-            document.querySelectorAll('.record-btn').forEach(btn => {
+            container.innerHTML = '<div class="cards-view">' + programs.map((p, i) => {
+                const id = 'prog_' + i;
+                programData[id] = p;
+                return `<div class="program-card"><div class="program-header"><span class="channel-badge">${p.channel_name}</span><span class="time-badge">${p.start_display} - ${p.stop_display}</span></div><div class="program-title">${p.title}</div><div class="program-meta">${p.category || ''} ${p.category ? '•' : ''} ${Math.floor(p.duration / 60)} min</div>${p.description ? `<div class="program-description">${p.description}</div>` : ''}<button class="record-btn" data-id="${id}">📹 Enregistrer</button></div>`;
+            }).join('') + '</div>';
+            container.querySelectorAll('.record-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const programId = this.getAttribute('data-program-id');
-                    const program = window.programData[programId];
-                    if (program) {
-                        scheduleRecording(program);
-                    }
+                    const prog = programData[this.dataset.id];
+                    if (prog) scheduleRecording(prog);
                 });
             });
         }
-
-        async function scheduleRecording(program) {
-            const confirmMsg = `Programmer l'enregistrement de:\n\n${program.title}\n${program.channel_name}\n${program.start_display} - ${program.stop_display}`;
-            
-            if (!confirm(confirmMsg)) return;
-
+        function displayGrid(programs) {
+            const container = document.getElementById('grid-view');
+            if (programs.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucun programme trouvé</div>';
+                return;
+            }
+            const byChannel = {};
+            const timeSlots = new Set();
+            programs.forEach(p => {
+                if (!byChannel[p.channel_name]) byChannel[p.channel_name] = [];
+                byChannel[p.channel_name].push(p);
+                timeSlots.add(new Date(p.start).getHours());
+            });
+            const channels = Object.keys(byChannel).sort();
+            const slots = [...timeSlots].sort((a, b) => a - b);
+            let html = '<div class="grid-view"><table><thead><tr><th>Chaîne</th>';
+            slots.forEach(h => html += `<th>${h}:00</th>`);
+            html += '</tr></thead><tbody>';
+            channels.forEach(ch => {
+                html += `<tr><td>${ch}</td>`;
+                slots.forEach(h => {
+                    const progs = byChannel[ch].filter(p => new Date(p.start).getHours() === h);
+                    html += '<td>';
+                    progs.forEach((p, i) => {
+                        const id = `grid_${ch}_${h}_${i}`;
+                        programData[id] = p;
+                        html += `<div class="grid-program" data-id="${id}"><div class="grid-program-time">${p.start_display} - ${p.stop_display}</div><div class="grid-program-title">${p.title}</div></div>`;
+                    });
+                    html += '</td>';
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+            container.querySelectorAll('.grid-program').forEach(el => {
+                el.addEventListener('click', function() {
+                    const prog = programData[this.dataset.id];
+                    if (prog && confirm(`Enregistrer "${prog.title}" ?`)) scheduleRecording(prog);
+                });
+            });
+        }
+        async function scheduleRecording(prog) {
             try {
-                const payload = {
-                    channel: program.channel_key,
-                    title: program.title,
-                    start: program.start,
-                    duration: program.duration,
-                    stream_url: program.stream_url
-                };
-                
-                console.log('Scheduling recording:', payload);
-                
                 const response = await fetch('/api/schedule', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({channel: prog.channel_key, title: prog.title, start: prog.start, duration: prog.duration, stream_url: prog.stream_url})
                 });
-
                 const result = await response.json();
-                
                 if (result.success) {
-                    alert('✅ Enregistrement programmé avec succès!');
+                    alert('✅ Enregistrement programmé!');
                     loadRecordings();
                 } else {
                     alert('❌ Erreur: ' + (result.error || 'Erreur inconnue'));
-                    console.error('Scheduling error:', result);
                 }
             } catch (error) {
-                alert('❌ Erreur de communication avec le serveur');
-                console.error('Fetch error:', error);
+                alert('❌ Erreur serveur');
+                console.error(error);
             }
         }
-
-        async function cancelRecording(scheduleId) {
-            if (!confirm('Annuler cet enregistrement programmé?')) return;
-
-            try {
-                const response = await fetch(`/api/schedule/${scheduleId}`, {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('✅ Enregistrement annulé');
-                    loadRecordings();
-                } else {
-                    alert('❌ Erreur lors de l\'annulation');
-                }
-            } catch (error) {
-                alert('❌ Erreur de communication avec le serveur');
-            }
-        }
-
         async function loadRecordings() {
             try {
                 const response = await fetch('/api/recordings');
                 const data = await response.json();
-
-                const activeContainer = document.getElementById('active-recordings');
-                const scheduledContainer = document.getElementById('scheduled-recordings');
-
+                const activeEl = document.getElementById('active-recordings');
                 if (data.active.length === 0) {
-                    activeContainer.innerHTML = '<div class="empty-state">Aucun enregistrement en cours</div>';
+                    activeEl.innerHTML = '<div class="empty-state">Aucun enregistrement en cours</div>';
                 } else {
-                    activeContainer.innerHTML = data.active.map(r => `
-                        <div class="recording-item">
-                            <div>
-                                <div style="font-weight: 600;">${r.file}</div>
-                                <div style="color: #a0aec0; font-size: 0.9rem;">PID: ${r.pid}</div>
-                            </div>
-                            <span class="status-badge status-active">● En cours</span>
-                        </div>
-                    `).join('');
+                    activeEl.innerHTML = data.active.map(r => `<div class="recording-item"><div><div style="font-weight: 600;">${r.title}</div><div style="color: #a0aec0; font-size: 0.9rem;">${r.channel} • PID: ${r.pid}</div></div><span class="status-badge status-active">● En cours</span></div>`).join('');
                 }
-
+                const scheduledEl = document.getElementById('scheduled-recordings');
                 if (data.scheduled.length === 0) {
-                    scheduledContainer.innerHTML = '<div class="empty-state">Aucun enregistrement programmé</div>';
+                    scheduledEl.innerHTML = '<div class="empty-state">Aucun enregistrement programmé</div>';
                 } else {
-                    scheduledContainer.innerHTML = data.scheduled.map(r => {
-                        const startDate = new Date(r.start);
-                        const bufferInfo = r.buffer_minutes ? ` (+${r.buffer_minutes}min buffer)` : '';
-                        const durationMin = Math.floor(r.duration / 60);
-                        
-                        return `
-                        <div class="recording-item">
-                            <div>
-                                <div style="font-weight: 600;">${r.title}</div>
-                                <div style="color: #a0aec0; font-size: 0.9rem;">
-                                    ${r.channel} • ${startDate.toLocaleString('fr-FR')}${bufferInfo}
-                                </div>
-                                <div style="color: #718096; font-size: 0.85rem;">
-                                    Durée: ${durationMin} minutes
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <span class="status-badge status-scheduled">⏰ Programmé</span>
-                                <button onclick="cancelRecording('${r.id}')" style="background: #e53e3e; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer;">
-                                    ✕ Annuler
-                                </button>
-                            </div>
-                        </div>
-                    `}).join('');
+                    scheduledEl.innerHTML = data.scheduled.map(r => `<div class="recording-item"><div><div style="font-weight: 600;">${r.title}</div><div style="color: #a0aec0; font-size: 0.9rem;">${r.channel} • ${new Date(r.start).toLocaleString('fr-FR')}${r.buffer_minutes ? ` (+${r.buffer_minutes}min)` : ''}</div><div style="color: #718096; font-size: 0.85rem;">${Math.floor(r.duration / 60)} min</div></div><div><span class="status-badge status-scheduled">⏰ Programmé</span><button class="cancel-btn" data-id="${r.id}">✕</button></div></div>`).join('');
+                    scheduledEl.querySelectorAll('.cancel-btn').forEach(btn => {
+                        btn.addEventListener('click', async function() {
+                            if (!confirm('Annuler?')) return;
+                            try {
+                                await fetch(`/api/schedule/${this.dataset.id}`, {method: 'DELETE'});
+                                loadRecordings();
+                            } catch (error) {
+                                alert('Erreur');
+                            }
+                        });
+                    });
                 }
             } catch (error) {
-                console.error('Error loading recordings:', error);
+                console.error('Error:', error);
             }
         }
-
-        function switchTab(tabName) {
-            console.log('Switching to tab:', tabName);
-            
-            // Remove active from all tabs
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            
-            // Add active to clicked tab
-            const clickedTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
-            if (clickedTab) {
-                clickedTab.classList.add('active');
-            }
-            
-            // Show the correct content
-            const content = document.getElementById(tabName + '-tab');
-            if (content) {
-                content.classList.add('active');
-            } else {
-                console.error('Content not found for:', tabName);
-            }
-
-            if (tabName === 'recordings') {
-                console.log('Loading recordings...');
-                loadRecordings();
-            }
-        }
-
-        // Initialize
         loadEPG();
-        setInterval(loadEPG, 3600000); // Refresh EPG every hour
-        setInterval(loadRecordings, 30000); // Refresh recordings every 30 seconds
+        setInterval(loadEPG, 3600000);
+        setInterval(loadRecordings, 30000);
     </script>
 </body>
 </html>

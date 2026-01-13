@@ -23,6 +23,7 @@ EPG_CACHE_DURATION = 3600  # 1 hour
 RECORD_SCRIPT = "/app/record.sh"
 CHANNELS_CONFIG = "/app/channels.json"
 SCHEDULES_FILE = "/tmp/schedules.json"
+DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL', '')
 
 # Load channel configuration
 channels = {}
@@ -63,6 +64,41 @@ def save_schedules():
     """Save schedules to file"""
     with open(SCHEDULES_FILE, 'w') as f:
         json.dump(scheduled_recordings, f, indent=2)
+
+def send_discord_notification(title, description, color=5814783, fields=None):
+    """Send notification to Discord webhook"""
+    if not DISCORD_WEBHOOK_URL:
+        print("Discord webhook not configured, skipping notification")
+        return
+    
+    try:
+        embed = {
+            "title": title,
+            "description": description,
+            "color": color,
+            "timestamp": datetime.utcnow().isoformat(),
+            "footer": {
+                "text": "TV Recorder"
+            }
+        }
+        
+        if fields:
+            embed["fields"] = fields
+        
+        payload = {
+            "embeds": [embed]
+        }
+        
+        response = requests.post(
+            DISCORD_WEBHOOK_URL,
+            json=payload,
+            timeout=10
+        )
+        response.raise_for_status()
+        print(f"Discord notification sent: {title}")
+        
+    except Exception as e:
+        print(f"Error sending Discord notification: {e}")
 
 def get_epg_data():
     """Fetch and cache EPG data"""
@@ -169,6 +205,17 @@ def start_recording(schedule):
     
     print(f"Starting recording: {title} on {channel_name}")
     
+    # Send start notification
+    send_discord_notification(
+        title="🔴 Recording Started",
+        description=f"**{title}**",
+        color=15158332,  # Red
+        fields=[
+            {"name": "Channel", "value": channel_name, "inline": True},
+            {"name": "Duration", "value": f"{duration // 60} minutes", "inline": True}
+        ]
+    )
+    
     try:
         # Build output filename
         output_dir = settings.get('output_dir', '/recordings')
@@ -209,9 +256,58 @@ def start_recording(schedule):
         
         # Wait for process to complete (in background)
         def wait_for_completion():
+            start_time = datetime.now()
             stdout, _ = process.communicate()
+            end_time = datetime.now()
+            elapsed = (end_time - start_time).total_seconds()
+            
             if stdout:
                 print(f"Recording output: {stdout}")
+            
+            # Check if file exists and get size
+            file_size = "Unknown"
+            file_exists = os.path.exists(output_file)
+            
+            if file_exists:
+                size_bytes = os.path.getsize(output_file)
+                if size_bytes < 1024:
+                    file_size = f"{size_bytes} B"
+                elif size_bytes < 1024 * 1024:
+                    file_size = f"{size_bytes / 1024:.2f} KB"
+                elif size_bytes < 1024 * 1024 * 1024:
+                    file_size = f"{size_bytes / (1024 * 1024):.2f} MB"
+                else:
+                    file_size = f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+            
+            # Determine success/failure
+            success = process.returncode == 0 and file_exists
+            
+            if success:
+                # Send success notification
+                send_discord_notification(
+                    title="✅ Recording Completed",
+                    description=f"**{title}**",
+                    color=5763719,  # Green
+                    fields=[
+                        {"name": "Channel", "value": channel_name, "inline": True},
+                        {"name": "Duration", "value": f"{int(elapsed / 60)} minutes", "inline": True},
+                        {"name": "File Size", "value": file_size, "inline": True},
+                        {"name": "File", "value": os.path.basename(output_file), "inline": False}
+                    ]
+                )
+            else:
+                # Send failure notification
+                error_msg = "Recording process failed" if process.returncode != 0 else "Output file not found"
+                send_discord_notification(
+                    title="❌ Recording Failed",
+                    description=f"**{title}**",
+                    color=15158332,  # Red
+                    fields=[
+                        {"name": "Channel", "value": channel_name, "inline": True},
+                        {"name": "Error", "value": error_msg, "inline": False}
+                    ]
+                )
+            
             if recording_id in active_recordings:
                 del active_recordings[recording_id]
             print(f"Recording completed: {title}")
@@ -222,6 +318,17 @@ def start_recording(schedule):
         print(f"Error starting recording: {e}")
         import traceback
         traceback.print_exc()
+        
+        # Send error notification
+        send_discord_notification(
+            title="❌ Recording Error",
+            description=f"**{title}**",
+            color=15158332,  # Red
+            fields=[
+                {"name": "Channel", "value": channel_name, "inline": True},
+                {"name": "Error", "value": str(e), "inline": False}
+            ]
+        )
 
 def scheduler_thread():
     """Background thread that checks for scheduled recordings"""
@@ -353,9 +460,11 @@ def api_schedule():
 def api_delete_schedule(schedule_id):
     """Cancel a scheduled recording"""
     global scheduled_recordings
+    
     scheduled_recordings = [s for s in scheduled_recordings if s['id'] != schedule_id]
     save_schedules()
     print(f"Cancelled schedule: {schedule_id}")
+    
     return jsonify({'success': True})
 
 # Initialize
@@ -370,4 +479,8 @@ if __name__ == '__main__':
     print("TV Recorder starting...")
     print(f"Loaded {len(channels)} channels")
     print(f"Loaded {len(scheduled_recordings)} scheduled recordings")
+    if DISCORD_WEBHOOK_URL:
+        print("Discord notifications enabled")
+    else:
+        print("Discord notifications disabled (DISCORD_WEBHOOK_URL not set)")
     app.run(host='0.0.0.0', port=5000, debug=False)

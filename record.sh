@@ -72,8 +72,8 @@ ffmpeg \
   -user_agent "$USER_AGENT" \
   -i "$STREAM_URL" \
   -t "$DURATION" \
-  -map 0:p:3:v \
-  -map 0:p:3:a \
+  -map 0:p:3:v:? \
+  -map 0:p:3:a:? \
   -c:v copy \
   -c:a copy \
   -bsf:a aac_adtstoasc \
