@@ -15,7 +15,7 @@ services:
     environment:
       - TZ=Europe/Paris
       - PYTHONUNBUFFERED=1
-      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1434115229511581759/3lwKvReE9mCiRI8qFZn12rtN6_zxsRoMZTTzF5RY4O9flyAyBYuFpg1EMS5gKbtska-1
+      - DISCORD_WEBHOOK_URL=
     networks:
       - tv-recorder-net
     
