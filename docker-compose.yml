@@ -16,7 +16,7 @@ services:
       - TZ=Europe/Paris
       - PYTHONUNBUFFERED=1
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
-      - EPG_URL=https://xmltvfr.fr/xmltv/xmltv_tnt.xml
+      - EPG_URL=${EPG_URL}
     networks:
       - tv-recorder-net
     
