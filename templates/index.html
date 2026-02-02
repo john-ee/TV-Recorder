@@ -263,7 +263,10 @@
                 if (data.scheduled.length === 0) {
                     scheduledEl.innerHTML = '<div class="empty-state">Aucun enregistrement programmé</div>';
                 } else {
-                    scheduledEl.innerHTML = data.scheduled.map(r => `<div class="recording-item"><div><div style="font-weight: 600;">${r.title}</div><div style="color: #a0aec0; font-size: 0.9rem;">${r.channel} • ${new Date(r.start).toLocaleString('fr-FR')}${r.buffer_minutes ? ` (+${r.buffer_minutes}min)` : ''}</div><div style="color: #718096; font-size: 0.85rem;">${Math.floor(r.duration / 60)} min</div></div><div><span class="status-badge status-scheduled">⏰ Programmé</span><button class="rename-btn" data-id="${r.id}" data-title="${r.title.replace(/"/g, '&quot;')}">✏️</button><button class="cancel-btn" data-id="${r.id}">✕</button></div></div>`).join('');
+                    // Sort scheduled recordings by start time (earliest first)
+                    const sortedScheduled = data.scheduled.sort((a, b) => new Date(a.start) - new Date(b.start));
+                    
+                    scheduledEl.innerHTML = sortedScheduled.map(r => `<div class="recording-item"><div><div style="font-weight: 600;">${r.title}</div><div style="color: #a0aec0; font-size: 0.9rem;">${r.channel} • ${new Date(r.start).toLocaleString('fr-FR')}${r.buffer_minutes ? ` (+${r.buffer_minutes}min)` : ''}</div><div style="color: #718096; font-size: 0.85rem;">${Math.floor(r.duration / 60)} min</div></div><div><span class="status-badge status-scheduled">⏰ Programmé</span><button class="rename-btn" data-id="${r.id}" data-title="${r.title.replace(/"/g, '&quot;')}">✏️</button><button class="cancel-btn" data-id="${r.id}">✕</button></div></div>`).join('');
                     scheduledEl.querySelectorAll('.rename-btn').forEach(btn => {
                         btn.addEventListener('click', function() {
                             openRenameModal(this.dataset.id, this.dataset.title);

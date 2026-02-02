@@ -395,8 +395,11 @@ def api_epg():
 @app.route('/api/recordings')
 def api_recordings():
     """Get scheduled and active recordings"""
+    # Sort scheduled recordings by start time (earliest first)
+    sorted_scheduled = sorted(scheduled_recordings, key=lambda x: x['start'])
+    
     return jsonify({
-        'scheduled': scheduled_recordings,
+        'scheduled': sorted_scheduled,
         'active': list(active_recordings.values())
     })
 
