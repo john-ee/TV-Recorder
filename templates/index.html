@@ -54,6 +54,15 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .empty-state { text-align: center; padding: 60px 20px; color: #a0aec0; }
         .cancel-btn { background: #e53e3e; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-left: 10px; }
+        .rename-btn { background: #4299e1; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-left: 10px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
+        .modal-content { background: #1a1f2e; margin: 15% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; }
+        .modal-title { font-size: 1.5rem; margin-bottom: 20px; }
+        .modal-input { width: 100%; padding: 12px; background: #2d3748; border: 1px solid #4a5568; color: #e4e6eb; border-radius: 8px; font-size: 1rem; margin-bottom: 20px; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+        .modal-btn-primary { background: #667eea; color: white; }
+        .modal-btn-secondary { background: #4a5568; color: white; }
     </style>
 </head>
 <body>
@@ -86,10 +95,25 @@
             <div id="scheduled-recordings" class="recording-list"></div>
         </div>
     </div>
+    
+    <!-- Rename Modal -->
+    <div id="rename-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Renommer l'enregistrement</h2>
+            <input type="text" id="rename-input" class="modal-input" placeholder="Nouveau titre...">
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" onclick="closeRenameModal()">Annuler</button>
+                <button class="modal-btn modal-btn-primary" onclick="saveRename()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         let allPrograms = [];
         let programData = {};
         let currentView = 'cards';
+        let currentRenameId = null;
+        
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 const tabName = this.dataset.tab;
@@ -113,6 +137,7 @@
         document.getElementById('channel-filter').addEventListener('change', filterPrograms);
         document.getElementById('date-filter').addEventListener('change', filterPrograms);
         document.getElementById('search-filter').addEventListener('input', filterPrograms);
+        
         async function loadEPG() {
             try {
                 const response = await fetch('/api/epg');
@@ -125,6 +150,7 @@
                 document.getElementById('cards-view').innerHTML = '<div class="empty-state">Erreur de chargement</div>';
             }
         }
+        
         function filterPrograms() {
             const channelFilter = document.getElementById('channel-filter').value;
             const dateFilter = parseInt(document.getElementById('date-filter').value);
@@ -141,6 +167,7 @@
             });
             if (currentView === 'cards') displayCards(filtered); else displayGrid(filtered);
         }
+        
         function displayCards(programs) {
             const container = document.getElementById('cards-view');
             if (programs.length === 0) {
@@ -150,7 +177,7 @@
             container.innerHTML = '<div class="cards-view">' + programs.map((p, i) => {
                 const id = 'prog_' + i;
                 programData[id] = p;
-                return `<div class="program-card"><div class="program-header"><span class="channel-badge">${p.channel_name}</span><span class="time-badge">${p.start_display} - ${p.stop_display}</span></div><div class="program-title">${p.title}</div><div class="program-meta">${p.category || ''} ${p.category ? '•' : ''} ${Math.floor(p.duration / 60)} min</div>${p.description ? `<div class="program-description">${p.description}</div>` : ''}<button class="record-btn" data-id="${id}">📹 Enregistrer</button></div>`;
+                return `<div class="program-card"><div class="program-header"><span class="channel-badge">${p.channel_name}</span><span class="time-badge">${p.start_display} - ${p.stop_display}</span></div><div class="program-title">${p.title}</div><div class="program-meta">${p.category || ''} ${p.category ? '•' : ''} ${Math.floor(p.duration / 60)} min</div>${p.description ? `<div class="program-description">${p.description}</div>` : ''}<button class="record-btn" data-id="${id}">🔹 Enregistrer</button></div>`;
             }).join('') + '</div>';
             container.querySelectorAll('.record-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -159,6 +186,7 @@
                 });
             });
         }
+        
         function displayGrid(programs) {
             const container = document.getElementById('grid-view');
             if (programs.length === 0) {
@@ -200,6 +228,7 @@
                 });
             });
         }
+        
         async function scheduleRecording(prog) {
             try {
                 const response = await fetch('/api/schedule', {
@@ -219,6 +248,7 @@
                 console.error(error);
             }
         }
+        
         async function loadRecordings() {
             try {
                 const response = await fetch('/api/recordings');
@@ -233,7 +263,12 @@
                 if (data.scheduled.length === 0) {
                     scheduledEl.innerHTML = '<div class="empty-state">Aucun enregistrement programmé</div>';
                 } else {
-                    scheduledEl.innerHTML = data.scheduled.map(r => `<div class="recording-item"><div><div style="font-weight: 600;">${r.title}</div><div style="color: #a0aec0; font-size: 0.9rem;">${r.channel} • ${new Date(r.start).toLocaleString('fr-FR')}${r.buffer_minutes ? ` (+${r.buffer_minutes}min)` : ''}</div><div style="color: #718096; font-size: 0.85rem;">${Math.floor(r.duration / 60)} min</div></div><div><span class="status-badge status-scheduled">⏰ Programmé</span><button class="cancel-btn" data-id="${r.id}">✕</button></div></div>`).join('');
+                    scheduledEl.innerHTML = data.scheduled.map(r => `<div class="recording-item"><div><div style="font-weight: 600;">${r.title}</div><div style="color: #a0aec0; font-size: 0.9rem;">${r.channel} • ${new Date(r.start).toLocaleString('fr-FR')}${r.buffer_minutes ? ` (+${r.buffer_minutes}min)` : ''}</div><div style="color: #718096; font-size: 0.85rem;">${Math.floor(r.duration / 60)} min</div></div><div><span class="status-badge status-scheduled">⏰ Programmé</span><button class="rename-btn" data-id="${r.id}" data-title="${r.title.replace(/"/g, '&quot;')}">✏️</button><button class="cancel-btn" data-id="${r.id}">✕</button></div></div>`).join('');
+                    scheduledEl.querySelectorAll('.rename-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            openRenameModal(this.dataset.id, this.dataset.title);
+                        });
+                    });
                     scheduledEl.querySelectorAll('.cancel-btn').forEach(btn => {
                         btn.addEventListener('click', async function() {
                             if (!confirm('Annuler?')) return;
@@ -250,6 +285,61 @@
                 console.error('Error:', error);
             }
         }
+        
+        function openRenameModal(id, currentTitle) {
+            currentRenameId = id;
+            document.getElementById('rename-input').value = currentTitle;
+            document.getElementById('rename-modal').style.display = 'block';
+            document.getElementById('rename-input').focus();
+        }
+        
+        function closeRenameModal() {
+            document.getElementById('rename-modal').style.display = 'none';
+            currentRenameId = null;
+        }
+        
+        async function saveRename() {
+            const newTitle = document.getElementById('rename-input').value.trim();
+            if (!newTitle) {
+                alert('Le titre ne peut pas être vide');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/schedule/${currentRenameId}`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({title: newTitle})
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    closeRenameModal();
+                    loadRecordings();
+                } else {
+                    alert('❌ Erreur: ' + (result.error || 'Erreur inconnue'));
+                }
+            } catch (error) {
+                alert('❌ Erreur serveur');
+                console.error(error);
+            }
+        }
+        
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('rename-modal');
+            if (event.target === modal) {
+                closeRenameModal();
+            }
+        }
+        
+        // Handle Enter key in rename input
+        document.getElementById('rename-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                saveRename();
+            }
+        });
+        
         loadEPG();
         setInterval(loadEPG, 3600000);
         setInterval(loadRecordings, 30000);

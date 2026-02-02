@@ -4,7 +4,7 @@ services:
     container_name: tv-recorder-test
     restart: unless-stopped
     ports:
-      - "5010:5000"
+      - "5020:5000"
     volumes:
       # Mount channels config (can be edited on host)
       - ./channels.json:/app/channels.json:ro
@@ -15,7 +15,8 @@ services:
     environment:
       - TZ=Europe/Paris
       - PYTHONUNBUFFERED=1
-      - DISCORD_WEBHOOK_URL=
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - EPG_URL=https://xmltvfr.fr/xmltv/xmltv_tnt.xml
     networks:
       - tv-recorder-net
     

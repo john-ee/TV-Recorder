@@ -17,7 +17,7 @@ import json
 app = Flask(__name__)
 
 # Configuration
-EPG_URL = "https://xmltvfr.fr/xmltv/xmltv_tnt.xml"
+EPG_URL = os.environ.get('EPG_URL', '')
 EPG_CACHE_FILE = "/tmp/epg_cache.xml"
 EPG_CACHE_DURATION = 3600  # 1 hour
 RECORD_SCRIPT = "/app/record.sh"
@@ -466,6 +466,26 @@ def api_delete_schedule(schedule_id):
     print(f"Cancelled schedule: {schedule_id}")
     
     return jsonify({'success': True})
+
+@app.route('/api/schedule/<schedule_id>', methods=['PATCH'])
+def api_update_schedule(schedule_id):
+    """Update a scheduled recording"""
+    global scheduled_recordings
+    
+    data = request.json
+    new_title = data.get('title')
+    
+    if not new_title:
+        return jsonify({'error': 'Title is required'}), 400
+    
+    for schedule in scheduled_recordings:
+        if schedule['id'] == schedule_id:
+            schedule['title'] = new_title
+            save_schedules()
+            print(f"Renamed schedule {schedule_id} to: {new_title}")
+            return jsonify({'success': True, 'title': new_title})
+    
+    return jsonify({'error': 'Schedule not found'}), 404
 
 # Initialize
 load_channels()
